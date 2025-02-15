@@ -1,7 +1,8 @@
 import telebot
+from telebot import types
 from config import TOKEN
-from handlers import start_handler, name_handler, help_command, info_command, delete_user_command
-from database import init_db, user_exists
+from handlers import start_handler, help_command, info_command, delete_user_command, change_color_command, language_handler
+from database import init_db
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -21,21 +22,35 @@ def info_command_handler(message):
     info_command(message, bot)
 
 @bot.message_handler(commands=['delete'])
-def delete_command_handler(message):
+def delete_user_handler(message):
     delete_user_command(message, bot)
 
-@bot.message_handler(content_types=['text'])
-def handle_text(message):
-    if not user_exists(message.chat.id):  # Проверка на регистрацию
-        name_handler(message, bot)
+@bot.message_handler(commands=['change_color'])
+def change_color_handler(message):
+    change_color_command(message, bot)
 
-@bot.message_handler(content_types=['contact'])
-def handle_contact(message):
-    pass  # Обработку номера вызывает name_handler()
+# Обработчик выбора языка
+@bot.message_handler(func=lambda message: message.text in ["🇷🇺 Русский", "🇺🇿 O'zbek"])
+def language_selection_handler(message):
+    language_handler(message, bot)
 
-@bot.message_handler(content_types=['location'])
-def handle_location(message):
-    pass  # Обработку локации вызывает contact_handler()
+# Обработчики кнопок
+@bot.message_handler(func=lambda message: message.text.lower() in ['infoℹ', 'info'])
+def info_button_handler(message):
+    info_command(message, bot)
+
+@bot.message_handler(func=lambda message: message.text.lower() in ['help🆘', 'help'])
+def help_button_handler(message):
+    help_command(message, bot)
+
+@bot.message_handler(func=lambda message: message.text.lower() in ['delete🗑', 'delete'])
+def delete_button_handler(message):
+    delete_user_command(message, bot)
+
+@bot.message_handler(func=lambda message: message.text.lower() in ['change_color✨', 'change_color'])
+def change_color_button_handler(message):
+    change_color_command(message, bot)
 
 if __name__ == "__main__":
+    print("Бот запущен...")
     bot.polling(none_stop=True)
